@@ -1,4 +1,4 @@
 FROM openjdk:11-jdk-alpine
 EXPOSE 8080
-ADD /build/libs/RequestLimiterApplication-0.0.1-SNAPSHOT.jar RequestLimiterApplication.jar
-ENTRYPOINT ["java", "-jar", "RequestLimiterApplication.jar"]
+ADD /build/libs/RequestLimiterApplication-0.0.1-SNAPSHOT.war RequestLimiterApplication.war
+ENTRYPOINT ["java", "-jar", "RequestLimiterApplication.war"]
