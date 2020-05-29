@@ -34,10 +34,10 @@ public class RequestLimiterService
 
     boolean checkRequestCount(String ip) {
         List<Long> requestTimes = requestsIp2Time.getOrDefault(ip, new LinkedList<>());
+        requestsIp2Time.putIfAbsent(ip,requestTimes);
         synchronized (requestTimes)
         {
             updateTimes(requestTimes);
-            requestsIp2Time.putIfAbsent(ip,requestTimes);
             return requestTimes.size() <= paramN;
         }
     }
