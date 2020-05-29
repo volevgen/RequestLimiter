@@ -64,6 +64,8 @@ class RequestLimiterControllerTest
         };
 
         ExecutorService executor = Executors.newFixedThreadPool(testThreadsCount);
-        assertEquals(executor.submit(task).get(),true);
+        for(int i=0;i<testThreadsCount;i++){
+            assertEquals(executor.submit(task).get(), true);
+        }
     }
 }
