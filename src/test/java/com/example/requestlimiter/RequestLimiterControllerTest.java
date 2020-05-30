@@ -3,9 +3,12 @@ package com.example.requestlimiter;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.annotation.Resource;
 
@@ -41,31 +44,35 @@ class RequestLimiterControllerTest
     @Test
     void test() throws Exception {
 
-        Callable<Boolean> task = () -> {
-            final String threadName = Thread.currentThread().getName();
-            for(int i=0;i<=paramN * 2;i++)
-            {
-                try
-                {
-                    mockMvc.perform(MockMvcRequestBuilders.get("/request").with(new RequestPostProcessor()
-                    {
-                        public MockHttpServletRequest postProcessRequest(MockHttpServletRequest request)
-                        {
-                            request.setRemoteAddr(threadName);
-                            return request;
-                        }
-                    }).accept(MediaType.APPLICATION_JSON)).andExpect( i < paramN ? status().isOk() : status().isBadGateway());
-                } catch (Exception e) {
-                    return false;
-                }
-
-            }
-            return true;
-        };
+        List<Callable<Boolean>> tasks = new ArrayList<>();
 
         ExecutorService executor = Executors.newFixedThreadPool(testThreadsCount);
         for(int i=0;i<testThreadsCount;i++){
-            assertEquals(executor.submit(task).get(), true);
+            tasks.add(() -> {
+                final String threadName = Thread.currentThread().getName();
+                for(int j=0;j<=paramN * 2;j++)
+                {
+                    try
+                    {
+                        mockMvc.perform(MockMvcRequestBuilders.get("/request").with(new RequestPostProcessor()
+                        {
+                            public MockHttpServletRequest postProcessRequest(MockHttpServletRequest request)
+                            {
+                                request.setRemoteAddr(threadName);
+                                return request;
+                            }
+                        }).accept(MediaType.APPLICATION_JSON)).andExpect( j < paramN ? status().isOk() : status().isBadGateway());
+                    } catch (Exception e) {
+                        return false;
+                    }
+
+                }
+                return true;
+            });
+        }
+        List<Future<Boolean>> results = executor.invokeAll(tasks);
+        for(Future<Boolean> result : results) {
+            assertEquals(result.get(), true);
         }
     }
 }
